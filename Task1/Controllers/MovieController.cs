@@ -1,4 +1,5 @@
 ﻿using LMS.Data;
+using LMS.Data.Dtos;
 using LMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,29 +30,44 @@ public class MovieController : ControllerBase
     }
 
     [HttpPost]
-    public void Post([FromBody] Movie movie)
+    public IActionResult Post([FromBody] CreateMovieDto dto)
     {
+        if (dto == null) return BadRequest();
+
+        var movie = new Movie
+        {
+            Title = dto.Title,
+            Plot = dto.Plot,
+            Cast = dto.Cast,
+            Director = dto.Director,
+            Category = dto.Category,
+            Duration = dto.Duration,
+            ReleaseDate = dto.ReleaseDate,
+            Rating = dto.Rating
+        };
+
         context.Movies.Add(movie);
         context.SaveChanges();
+
+        return CreatedAtAction(nameof(Get), new { id = movie.Id }, movie);
     }
 
+    // PUT api/movie/{id}
     [HttpPut("{id}")]
-    public IActionResult Put(int id, [FromBody] Movie movie)
+    public IActionResult Put(int id, [FromBody] UpdateMovieDto dto)
     {
-        if (movie == null) return BadRequest();
+        if (dto == null) return BadRequest();
 
         var existing = context.Movies.Find(id);
         if (existing == null) return NotFound();
 
-        var originalRating = existing.Rating;
-        var originalID = existing.Id;
-
-        // Update everything from the incoming object
-        context.Entry(existing).CurrentValues.SetValues(movie);
-
-        // Restore the original rating to prevent it from being overwritten
-        existing.Rating = originalRating;
-        existing.Id = originalID;
+        existing.Title = dto.Title;
+        existing.Plot = dto.Plot;
+        existing.Cast = dto.Cast;
+        existing.Director = dto.Director;
+        existing.Category = dto.Category;
+        existing.Duration = dto.Duration;
+        existing.ReleaseDate = dto.ReleaseDate;
 
         context.SaveChanges();
         return Ok(existing);
