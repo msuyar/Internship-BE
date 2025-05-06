@@ -24,7 +24,12 @@ public class MovieController : ControllerBase
         // I made this so the code would be more readable 
         // if you want I can turn this into an oneliner
         var movies = _context.Movies.ToList();
-        return Ok(movies);
+        
+        return Ok(new {
+            success = true,
+            message = $"Retrieved {movies.Count} movie(s) successfully",
+            data = movies
+        });
     }
 
     [HttpGet("{id}")]
@@ -34,7 +39,10 @@ public class MovieController : ControllerBase
 
         if (movie == null)
         {
-            return NotFound();
+            return NotFound(new {
+                success = false,
+                message = $"Movie with ID {id} was not found"
+            });
         }
 
         var movieDto = new ReadMovieDto
@@ -50,7 +58,11 @@ public class MovieController : ControllerBase
             Rating = movie.Rating
         };
 
-        return Ok(movieDto);
+        return Ok(new {
+            success = true,
+            message = "Movie retrieved successfully",
+            data = movieDto
+        });
     }
 
     [HttpPost]
@@ -71,7 +83,11 @@ public class MovieController : ControllerBase
         _context.Movies.Add(movie);
         _context.SaveChanges();
 
-        return CreatedAtAction(nameof(Get), new { id = movie.Id }, movie);
+        return CreatedAtAction(nameof(Get), new { id = movie.Id }, new {
+            success = true,
+            message = "Movie created successfully",
+            data = movie
+        });
     }
 
     // PUT api/movie/{id}
@@ -82,7 +98,10 @@ public class MovieController : ControllerBase
         
         if (existing == null)
         {
-            return NotFound();
+            return NotFound(new {
+                success = false,
+                message = $"Movie with ID {id} was not found"
+            });
         }
 
         existing.Title = dto.Title;
@@ -94,7 +113,12 @@ public class MovieController : ControllerBase
         existing.ReleaseDate = dto.ReleaseDate;
 
         _context.SaveChanges();
-        return Ok(existing);
+        
+        return Ok(new {
+            success = true,
+            message = "Movie updated successfully",
+            data = existing
+        });
     }
 
     [HttpDelete("{id}")]
@@ -104,12 +128,18 @@ public class MovieController : ControllerBase
         
         if (movie == null)
         {
-            return NotFound();
+            return NotFound(new {
+                success = false,
+                message = $"Movie with ID {id} was not found"
+            });
         }
         
         _context.Movies.Remove(movie);
         _context.SaveChanges();
 
-        return Ok();
+        return Ok(new {
+            success = true,
+            message = $"Movie with ID {id} was deleted successfully"
+        });
     }
 }
