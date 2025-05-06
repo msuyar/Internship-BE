@@ -9,31 +9,53 @@ namespace AspNETWebAPIDersleri.Controllers;
 [ApiController]
 public class MovieController : ControllerBase
 {
-    private readonly LMSDBContext context;
+    private readonly LMSDBContext _context;
+    private readonly IMovieRepository _repository;
 
-    public MovieController(LMSDBContext context)
+    public MovieController(IMovieRepository repository, LMSDBContext context)
     {
-        //context = new LMSDBContext();
-        this.context = context;
+        _repository = repository;
+        _context = context;
     }
 
     [HttpGet]
-    public List<Movie> Get()
+    public IActionResult Get()
     {
-        return context.Movies.ToList();
+        // I made this so the code would be more readable 
+        // if you want I can turn this into an oneliner
+        var movies = _context.Movies.ToList();
+        return Ok(movies);
     }
 
     [HttpGet("{id}")]
-    public Movie Get(int id)
+    public IActionResult Get(int id)
     {
-        return context.Movies.Find(id);
+        var movie = _context.Movies.Find(id);
+
+        if (movie == null)
+        {
+            return NotFound();
+        }
+
+        var movieDto = new ReadMovieDto
+        {
+            Id = movie.Id,
+            Title = movie.Title,
+            Plot = movie.Plot,
+            Cast = movie.Cast,
+            Director = movie.Director,
+            Category = movie.Category,
+            Duration = movie.Duration,
+            ReleaseDate = movie.ReleaseDate,
+            Rating = movie.Rating
+        };
+
+        return Ok(movieDto);
     }
 
     [HttpPost]
     public IActionResult Post([FromBody] CreateMovieDto dto)
     {
-        if (dto == null) return BadRequest();
-
         var movie = new Movie
         {
             Title = dto.Title,
@@ -46,8 +68,8 @@ public class MovieController : ControllerBase
             Rating = dto.Rating
         };
 
-        context.Movies.Add(movie);
-        context.SaveChanges();
+        _context.Movies.Add(movie);
+        _context.SaveChanges();
 
         return CreatedAtAction(nameof(Get), new { id = movie.Id }, movie);
     }
@@ -56,10 +78,12 @@ public class MovieController : ControllerBase
     [HttpPut("{id}")]
     public IActionResult Put(int id, [FromBody] UpdateMovieDto dto)
     {
-        if (dto == null) return BadRequest();
-
-        var existing = context.Movies.Find(id);
-        if (existing == null) return NotFound();
+        var existing = _context.Movies.Find(id);
+        
+        if (existing == null)
+        {
+            return NotFound();
+        }
 
         existing.Title = dto.Title;
         existing.Plot = dto.Plot;
@@ -69,15 +93,23 @@ public class MovieController : ControllerBase
         existing.Duration = dto.Duration;
         existing.ReleaseDate = dto.ReleaseDate;
 
-        context.SaveChanges();
+        _context.SaveChanges();
         return Ok(existing);
     }
 
     [HttpDelete("{id}")]
-    public void Delete(int id)
+    public IActionResult Delete(int id)
     {
-        var movie = context.Movies.Find(id);
-        context.Movies.Remove(movie);
-        context.SaveChanges();
+        var movie = _context.Movies.Find(id);
+        
+        if (movie == null)
+        {
+            return NotFound();
+        }
+        
+        _context.Movies.Remove(movie);
+        _context.SaveChanges();
+
+        return Ok();
     }
 }

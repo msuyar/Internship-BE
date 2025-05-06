@@ -23,6 +23,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddScoped<IMovieRepository, MovieRepository>();
+
 // DBConfig
 builder.Services.AddDbContext<LMSDBContext>(options =>
 {
