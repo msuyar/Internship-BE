@@ -9,37 +9,35 @@ namespace AspNETWebAPIDersleri.Controllers;
 [ApiController]
 public class MovieController : ControllerBase
 {
-    private readonly LMSDBContext _context;
     private readonly IMovieRepository _repository;
 
-    public MovieController(IMovieRepository repository, LMSDBContext context)
+    public MovieController(IMovieRepository repository)
     {
         _repository = repository;
-        _context = context;
     }
 
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        // I made this so the code would be more readable 
-        // if you want I can turn this into an oneliner
-        var movies = _context.Movies.ToList();
-        
-        return Ok(new {
+        var movies = await _repository.GetAllAsync();
+
+        return Ok(new
+        {
             success = true,
-            message = $"Retrieved {movies.Count} movie(s) successfully",
+            message = $"Retrieved {movies.Count()} movie(s) successfully",
             data = movies
         });
     }
 
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        var movie = _context.Movies.Find(id);
+        var movie = await _repository.GetByIdAsync(id);
 
         if (movie == null)
         {
-            return NotFound(new {
+            return NotFound(new
+            {
                 success = false,
                 message = $"Movie with ID {id} was not found"
             });
@@ -58,7 +56,8 @@ public class MovieController : ControllerBase
             Rating = movie.Rating
         };
 
-        return Ok(new {
+        return Ok(new
+        {
             success = true,
             message = "Movie retrieved successfully",
             data = movieDto
@@ -66,7 +65,7 @@ public class MovieController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Post([FromBody] CreateMovieDto dto)
+    public async Task<IActionResult> Post([FromBody] CreateMovieDto dto)
     {
         var movie = new Movie
         {
@@ -80,25 +79,25 @@ public class MovieController : ControllerBase
             Rating = dto.Rating
         };
 
-        _context.Movies.Add(movie);
-        _context.SaveChanges();
+        await _repository.AddAsync(movie);
 
-        return CreatedAtAction(nameof(Get), new { id = movie.Id }, new {
+        return CreatedAtAction(nameof(Get), new { id = movie.Id }, new
+        {
             success = true,
             message = "Movie created successfully",
             data = movie
         });
     }
 
-    // PUT api/movie/{id}
     [HttpPut("{id}")]
-    public IActionResult Put(int id, [FromBody] UpdateMovieDto dto)
+    public async Task<IActionResult> Put(int id, [FromBody] UpdateMovieDto dto)
     {
-        var existing = _context.Movies.Find(id);
-        
+        var existing = await _repository.GetByIdAsync(id);
+
         if (existing == null)
         {
-            return NotFound(new {
+            return NotFound(new
+            {
                 success = false,
                 message = $"Movie with ID {id} was not found"
             });
@@ -112,9 +111,10 @@ public class MovieController : ControllerBase
         existing.Duration = dto.Duration;
         existing.ReleaseDate = dto.ReleaseDate;
 
-        _context.SaveChanges();
-        
-        return Ok(new {
+        await _repository.UpdateAsync(existing);
+
+        return Ok(new
+        {
             success = true,
             message = "Movie updated successfully",
             data = existing
@@ -122,22 +122,23 @@ public class MovieController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var movie = _context.Movies.Find(id);
-        
-        if (movie == null)
+        var existing = await _repository.GetByIdAsync(id);
+
+        if (existing == null)
         {
-            return NotFound(new {
+            return NotFound(new
+            {
                 success = false,
                 message = $"Movie with ID {id} was not found"
             });
         }
-        
-        _context.Movies.Remove(movie);
-        _context.SaveChanges();
 
-        return Ok(new {
+        await _repository.DeleteAsync(id);
+
+        return Ok(new
+        {
             success = true,
             message = $"Movie with ID {id} was deleted successfully"
         });
