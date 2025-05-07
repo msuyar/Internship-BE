@@ -2,6 +2,7 @@
 using LMS.Data.Dtos;
 using LMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AspNETWebAPIDersleri.Controllers;
 
@@ -19,7 +20,7 @@ public class MovieController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var movies = await _repository.GetAllAsync();
+        var movies = await _repository.GetAll().ToListAsync();
 
         return Ok(new
         {
@@ -32,9 +33,9 @@ public class MovieController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        var movie = await _repository.GetByIdAsync(id);
+        var (found, movie) = await _repository.GetByIdAsync(id);
 
-        if (movie == null)
+        if (!found)
         {
             return NotFound(new
             {
@@ -43,7 +44,7 @@ public class MovieController : ControllerBase
             });
         }
 
-        var movieDto = new ReadMovieDto
+        var movieDto = new MovieDto
         {
             Id = movie.Id,
             Title = movie.Title,
@@ -92,9 +93,9 @@ public class MovieController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Put(int id, [FromBody] UpdateMovieDto dto)
     {
-        var existing = await _repository.GetByIdAsync(id);
+        var (found, existing) = await _repository.GetByIdAsync(id);
 
-        if (existing == null)
+        if (!found)
         {
             return NotFound(new
             {
@@ -124,9 +125,9 @@ public class MovieController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var existing = await _repository.GetByIdAsync(id);
+        var (found, existing) = await _repository.GetByIdAsync(id);
 
-        if (existing == null)
+        if (!found)
         {
             return NotFound(new
             {

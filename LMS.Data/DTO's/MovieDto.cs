@@ -1,6 +1,6 @@
 ﻿namespace LMS.Data.Dtos;
 
-public class ReadMovieDto
+public class MovieDto
 {
     public int Id { get; set; }
     public string Title { get; set; }

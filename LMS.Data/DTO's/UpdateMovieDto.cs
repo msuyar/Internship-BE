@@ -2,7 +2,6 @@
 
 public class UpdateMovieDto
 {
-    public int Id { get; set; } // included for display, not update
     public string Title { get; set; }
     public string Plot { get; set; }
     public string Cast { get; set; }

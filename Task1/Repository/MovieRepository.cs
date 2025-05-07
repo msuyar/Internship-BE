@@ -11,14 +11,15 @@ public class MovieRepository : IMovieRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Movie>> GetAllAsync()
+    public IQueryable<Movie> GetAll()
     {
-        return await _context.Movies.ToListAsync();
+        return _context.Movies.AsQueryable();
     }
 
-    public async Task<Movie> GetByIdAsync(int id)
+    public async Task<(bool found, Movie? movie)> GetByIdAsync(int id)
     {
-        return await _context.Movies.FindAsync(id);
+        var movie = await _context.Movies.FindAsync(id);
+        return (movie != null, movie);
     }
 
     public async Task AddAsync(Movie movie)
@@ -36,10 +37,7 @@ public class MovieRepository : IMovieRepository
     public async Task DeleteAsync(int id)
     {
         var movie = await _context.Movies.FindAsync(id);
-        if (movie != null)
-        {
-            _context.Movies.Remove(movie);
-            await _context.SaveChangesAsync();
-        }
+        _context.Movies.Remove(movie);
+        await _context.SaveChangesAsync();
     }
 }
