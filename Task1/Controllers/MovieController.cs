@@ -169,7 +169,7 @@ public class MovieController : ControllerBase
             return BadRequest(new
             {
                 success = false,
-                message = $"The duration must be greater than or equal to 0."   
+                message = $"Both durations must be greater than or equal to 0."   
             });
         }
         var query = _repository.GetAll();
