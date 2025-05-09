@@ -25,7 +25,6 @@ public class MovieRepository : IMovieRepository
     public async Task AddAsync(Movie movie)
     {
         await _context.Movies.AddAsync(movie);
-        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(Movie movie)
@@ -38,6 +37,11 @@ public class MovieRepository : IMovieRepository
     {
         var movie = await _context.Movies.FindAsync(id);
         _context.Movies.Remove(movie);
+    }
+    
+    // This lets us make single changes to the DB more efficiently
+    public async Task SaveChangesAsync()
+    {
         await _context.SaveChangesAsync();
     }
 }

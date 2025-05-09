@@ -7,4 +7,5 @@ public interface IMovieRepository
     Task AddAsync(Movie movie);
     Task UpdateAsync(Movie movie);
     Task DeleteAsync(int id);
+    Task SaveChangesAsync();
 }
