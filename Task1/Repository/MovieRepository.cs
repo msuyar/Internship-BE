@@ -16,10 +16,10 @@ public class MovieRepository : IMovieRepository
         return _context.Movies.AsQueryable();
     }
 
-    public async Task<(bool found, Movie? movie)> GetByIdAsync(int id)
+    public async Task <Movie?> GetByIdAsync(int id)
     {
         var movie = await _context.Movies.FindAsync(id);
-        return (movie != null, movie);
+        return (movie);
     }
 
     public async Task AddAsync(Movie movie)

@@ -35,9 +35,9 @@ public class MovieController : ControllerBase
     public async Task<IActionResult> Get(int id)
     {
         // For Filtering look at page 181 of the book
-        var (found, movie) = await _repository.GetByIdAsync(id);
+        var movie = await _repository.GetByIdAsync(id);
 
-        if (!found)
+        if (movie == null)
         {
             return NotFound(new
             {
@@ -85,7 +85,7 @@ public class MovieController : ControllerBase
         await _repository.AddAsync(movie);
         await _repository.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get), new { id = movie.Id }, new
+        return Ok(new
         {
             success = true,
             message = "Movie created successfully",
@@ -96,9 +96,9 @@ public class MovieController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Put(int id, [FromBody] UpdateMovieDto dto)
     {
-        var (found, existing) = await _repository.GetByIdAsync(id);
+        var existing = await _repository.GetByIdAsync(id);
 
-        if (!found)
+        if (existing == null)
         {
             return NotFound(new
             {
@@ -128,9 +128,9 @@ public class MovieController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var (found, existing) = await _repository.GetByIdAsync(id);
+        var existing = await _repository.GetByIdAsync(id);
 
-        if (!found)
+        if (existing == null)
         {
             return NotFound(new
             {
@@ -287,4 +287,102 @@ public class MovieController : ControllerBase
             data = movies
         });
     }
+    
+    [HttpGet("filter-sort-paginate")]
+    public async Task<IActionResult> GetFilteredSortedPaginatedMovies(
+        string? title = null,
+        int? minDuration = null,
+        int? maxDuration = null,
+        string? sortOrder = "asc",
+        int pageNumber = 1,
+        int pageSize = 10)
+    {
+        if (pageNumber <= 0 || pageSize <= 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Page number and page size must be greater than 0."
+            });
+        }
+
+        var query = _repository.GetAll();
+
+        // Filtering
+        if (!string.IsNullOrWhiteSpace(title))
+            query = query.Where(m => m.Title.Contains(title));
+
+        if (minDuration.HasValue)
+            query = query.Where(m => m.Duration >= minDuration.Value);
+
+        if (maxDuration.HasValue)
+            query = query.Where(m => m.Duration <= maxDuration.Value);
+
+        // Sorting
+        query = sortOrder?.ToLower() == "desc"
+            ? query.OrderByDescending(m => m.Title)
+            : query.OrderBy(m => m.Title);
+
+        // Pagination
+        var totalItems = await query.CountAsync();
+        var movies = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(m => new MovieDto
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Plot = m.Plot,
+                Cast = m.Cast,
+                Director = m.Director,
+                Category = m.Category,
+                Duration = m.Duration,
+                ReleaseDate = m.ReleaseDate,
+                Rating = m.Rating
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            success = true,
+            totalItems,
+            pageNumber,
+            pageSize,
+            data = movies
+        });
+    }
+    
+    [HttpGet("sort-by-title")]
+    public async Task<IActionResult> GetAllSortedByTitle([FromQuery] string sortOrder = "asc")
+    {
+        var query = _repository.GetAll();
+
+        query = sortOrder.ToLower() == "desc"
+            ? query.OrderByDescending(m => m.Title)
+            : query.OrderBy(m => m.Title);
+
+        var movies = await query
+            .Select(m => new MovieDto
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Plot = m.Plot,
+                Cast = m.Cast,
+                Director = m.Director,
+                Category = m.Category,
+                Duration = m.Duration,
+                ReleaseDate = m.ReleaseDate,
+                Rating = m.Rating
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            success = true,
+            sortOrder,
+            count = movies.Count,
+            data = movies
+        });
+    }
+
 }
