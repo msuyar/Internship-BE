@@ -4,6 +4,9 @@ using LMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using LMS.Data.Enums;
+using System.Linq; 
+using System.Linq.Expressions; 
 
 namespace AspNETWebAPIDersleri.Controllers;
 
@@ -83,7 +86,6 @@ public class MovieController : ControllerBase
         };
 
         await _repository.AddAsync(movie);
-        await _repository.SaveChangesAsync();
 
         return Ok(new
         {
@@ -114,8 +116,7 @@ public class MovieController : ControllerBase
         existing.Category = dto.Category;
         existing.Duration = dto.Duration;
         existing.ReleaseDate = dto.ReleaseDate;
-
-        await _repository.SaveChangesAsync();
+        
 
         return Ok(new
         {
@@ -140,7 +141,6 @@ public class MovieController : ControllerBase
         }
 
         await _repository.DeleteAsync(id);
-        await _repository.SaveChangesAsync();
 
         return Ok(new
         {
@@ -209,52 +209,14 @@ public class MovieController : ControllerBase
             data = movies
         });
     }
-
-    [HttpGet("filter-date")]
-    public async Task<ActionResult<IEnumerable<MovieDto>>> FilterByReleaseDate(int releaseDate)
-    {
-        if (releaseDate < 1888 || releaseDate > DateTime.Now.Year + 1)
-        {
-            return BadRequest(new
-                {
-                    success = false,
-                    message = $"The release date must be a valid year in movie history."   
-                });
-        }
-        var movies = await _repository.GetAll()
-            .Where(filteredMovie => filteredMovie.ReleaseDate.Year == releaseDate)
-            .Select(filteredMovie => new MovieDto
-            {
-                Id = filteredMovie.Id,
-                Title = filteredMovie.Title,
-                Plot = filteredMovie.Plot,
-                Cast = filteredMovie.Cast,
-                Director = filteredMovie.Director,
-                Category = filteredMovie.Category,
-                Duration = filteredMovie.Duration,
-                ReleaseDate = filteredMovie.ReleaseDate,
-                Rating = filteredMovie.Rating
-            })
-            .ToListAsync();
-
-        return Ok(new
-        {
-            success = true,
-            count = movies.Count,
-            data = movies
-        });
-    }
     
     [HttpGet("filter-date-between-years")]
     public async Task<ActionResult<IEnumerable<MovieDto>>> FilterByReleaseYearRange(
         int? minYear,
         int? maxYear)
     {
-        // Default min/max if not provided
-        minYear ??= 1888;
-        maxYear ??= DateTime.Now.Year;
 
-        if (minYear > maxYear || minYear < 1888 || maxYear > DateTime.Now.Year + 1)
+        if ((!minYear.HasValue && !maxYear.HasValue) || minYear > maxYear)
         {
             return BadRequest(new
             {
@@ -352,16 +314,119 @@ public class MovieController : ControllerBase
         });
     }
     
-    [HttpGet("sort-by-title")]
-    public async Task<IActionResult> GetAllSortedByTitle([FromQuery] string sortOrder = "asc")
+     [HttpGet("filter")]
+    public async Task<IActionResult> GetFilteredMovies(
+        string? title = null,
+        string? plot = null,
+        string? cast = null,
+        string? director = null,
+        string? category = null,
+        int? minDuration = null,
+        int? maxDuration = null,
+        float? rating = null,
+        int? releaseYear = null,
+        MovieSortBy sortBy = MovieSortBy.Title,
+        SortingType sortOrder = SortingType.asc,
+        int page = 1,
+        int pageSize = 10)
     {
+        if (page <= 0 || pageSize <= 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Page number and page size must be greater than 0."
+            });
+        }
+
         var query = _repository.GetAll();
 
-        query = sortOrder.ToLower() == "desc"
-            ? query.OrderByDescending(m => m.Title)
-            : query.OrderBy(m => m.Title);
+        // Filtering
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            query = query.Where(m => m.Title.Contains(title));
+        }
 
+        if (!string.IsNullOrWhiteSpace(plot))
+        {
+            query = query.Where(m => m.Plot.Contains(plot));
+        }
+
+        if (!string.IsNullOrWhiteSpace(cast))
+        {
+            query = query.Where(m => m.Cast.Contains(cast));
+        }
+
+        if (!string.IsNullOrWhiteSpace(director))
+        {
+            query = query.Where(m => m.Director.Contains(director));
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var filterGenres = category
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(g => g.Trim())
+                .ToList();
+
+            query = query.Where(m =>
+                !string.IsNullOrWhiteSpace(m.Category) &&
+                m.Category.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(g => g.Trim())
+                    .Any(g => filterGenres.Contains(g)));
+        }
+
+        if (minDuration.HasValue)
+        {
+            query = query.Where(m => m.Duration >= minDuration.Value);
+        }
+
+        if (maxDuration.HasValue)
+        {
+            query = query.Where(m => m.Duration <= maxDuration.Value);
+        }
+
+        if (rating.HasValue)
+        {
+            query = query.Where(m => m.Rating >= rating.Value);
+        }
+
+        if (releaseYear.HasValue)
+        {
+            query = query.Where(m => m.ReleaseDate.Year == releaseYear.Value);
+        }
+
+        // Sorting
+        query = (sortBy, sortOrder) switch
+        {
+            (MovieSortBy.Rating, SortingType.desc) => query.OrderByDescending(m => m.Rating),
+            (MovieSortBy.Rating, _) => query.OrderBy(m => m.Rating),
+
+            (MovieSortBy.Duration, SortingType.desc) => query.OrderByDescending(m => m.Duration),
+            (MovieSortBy.Duration, _) => query.OrderBy(m => m.Duration),
+
+            (MovieSortBy.ReleaseDate, SortingType.desc) => query.OrderByDescending(m => m.ReleaseDate),
+            (MovieSortBy.ReleaseDate, _) => query.OrderBy(m => m.ReleaseDate),
+
+            (MovieSortBy.Title, SortingType.desc) => query.OrderByDescending(m => m.Title),
+            _ => query.OrderBy(m => m.Title)
+        };
+
+        // Pagination
+        var totalItems = await query.CountAsync();
+        if (totalItems == 0)
+        {
+            return Ok(new
+            {
+                success = true,
+                totalItems = 0,
+                message = "No movies found with the specified filters.",
+                data = Array.Empty<MovieDto>()
+            });
+        }
         var movies = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(m => new MovieDto
             {
                 Id = m.Id,
@@ -379,10 +444,10 @@ public class MovieController : ControllerBase
         return Ok(new
         {
             success = true,
-            sortOrder,
-            count = movies.Count,
+            totalItems,
+            page,
+            pageSize,
             data = movies
         });
     }
-
 }

@@ -1,9 +1,11 @@
-﻿namespace LMS.Data.Entities;
-
-public class BaseEntity
+﻿namespace LMS.Data.Entities
 {
-    public int Id { get; set; }
-    public DateTime? CreatedDate { get; set; }
-    public DateTime? LastUpdatedDate { get; set; }
-    public bool? IsActive { get; set; }
+    public class BaseEntity
+    {
+        public int Id { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? LastUpdatedDate { get; set; }
+        public bool? IsActive { get; set; }
+    }
 }
+
