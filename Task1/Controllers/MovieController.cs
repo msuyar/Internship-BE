@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using LMS.Data.Enums;
 using System.Linq; 
 using System.Linq.Expressions; 
+using Z.EntityFramework.Plus;
+using LMS.Data.Extensions;
 
 namespace AspNETWebAPIDersleri.Controllers;
 
@@ -256,16 +258,6 @@ public class MovieController : ControllerBase
 
         // Pagination
         var totalItems = await query.CountAsync();
-        if (totalItems == 0)
-        {
-            return Ok(new
-            {
-                success = true,
-                totalItems = 0,
-                message = "No movies found with the specified filters.",
-                data = Array.Empty<MovieDto>()
-            });
-        }
         var movies = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -289,6 +281,91 @@ public class MovieController : ControllerBase
             totalItems,
             page,
             pageSize,
+            data = movies
+        });
+    }
+    
+    [HttpPost("filter2")]
+    public async Task<IActionResult> GetFilteredMovies2([FromBody] FilterMovieDto filter)
+    {
+        if (filter.Page <= 0 || filter.PageSize <= 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Page number and page size must be greater than 0."
+            });
+        }
+
+        var query = _repository.GetAll()
+            .WhereIf(!string.IsNullOrWhiteSpace(filter.Title), m => m.Title.Contains(filter.Title))
+            .WhereIf(!string.IsNullOrWhiteSpace(filter.Plot), m => m.Plot.Contains(filter.Plot))
+            .WhereIf(!string.IsNullOrWhiteSpace(filter.Cast), m => m.Cast.Contains(filter.Cast))
+            .WhereIf(!string.IsNullOrWhiteSpace(filter.Director), m => m.Director.Contains(filter.Director))
+
+            // Duration, rating, release year
+            .WhereIf(filter.MinDuration.HasValue, m => m.Duration >= filter.MinDuration.Value)
+            .WhereIf(filter.MaxDuration.HasValue, m => m.Duration <= filter.MaxDuration.Value)
+            .WhereIf(filter.Rating.HasValue, m => m.Rating >= filter.Rating.Value)
+            .WhereIf(filter.ReleaseDate.HasValue, m => m.ReleaseDate.Year == filter.ReleaseDate.Value.Year);
+
+        // Category filter (manual since it's multi-value split)
+        if (!string.IsNullOrWhiteSpace(filter.Category))
+        {
+            var filterGenres = filter.Category
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(g => g.Trim())
+                .ToList();
+
+            query = query.Where(m =>
+                !string.IsNullOrWhiteSpace(m.Category) &&
+                m.Category.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                         .Select(g => g.Trim())
+                         .Any(g => filterGenres.Contains(g)));
+        }
+
+        // Sorting
+        query = (filter.SortBy, filter.SortOrder) switch
+        {
+            (MovieSortBy.Rating, SortingType.desc) => query.OrderByDescending(m => m.Rating),
+            (MovieSortBy.Rating, _) => query.OrderBy(m => m.Rating),
+
+            (MovieSortBy.Duration, SortingType.desc) => query.OrderByDescending(m => m.Duration),
+            (MovieSortBy.Duration, _) => query.OrderBy(m => m.Duration),
+
+            (MovieSortBy.ReleaseDate, SortingType.desc) => query.OrderByDescending(m => m.ReleaseDate),
+            (MovieSortBy.ReleaseDate, _) => query.OrderBy(m => m.ReleaseDate),
+
+            (MovieSortBy.Title, SortingType.desc) => query.OrderByDescending(m => m.Title),
+            _ => query.OrderBy(m => m.Title)
+        };
+
+        // Pagination
+        var totalItems = await query.CountAsync();
+
+        var movies = await query
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .Select(m => new MovieDto
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Plot = m.Plot,
+                Cast = m.Cast,
+                Director = m.Director,
+                Category = m.Category,
+                Duration = m.Duration,
+                ReleaseDate = m.ReleaseDate,
+                Rating = m.Rating
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            success = true,
+            totalItems,
+            page = filter.Page,
+            pageSize = filter.PageSize,
             data = movies
         });
     }
