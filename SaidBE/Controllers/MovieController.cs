@@ -1,14 +1,10 @@
-﻿using LMS.Data;
+﻿using AspNETWebAPIDersleri.Repository;
 using LMS.Data.Dtos;
 using LMS.Data.Entities;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.EntityFrameworkCore;
 using LMS.Data.Enums;
-using System.Linq; 
-using System.Linq.Expressions; 
-using Z.EntityFramework.Plus;
 using LMS.Data.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AspNETWebAPIDersleri.Controllers;
 

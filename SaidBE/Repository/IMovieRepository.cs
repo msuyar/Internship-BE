@@ -1,5 +1,7 @@
 ﻿using LMS.Data.Entities;
 
+namespace AspNETWebAPIDersleri.Repository;
+
 public interface IMovieRepository
 {
     IQueryable<Movie> GetAll();

@@ -8,7 +8,7 @@ public class DbContextFactory : IDesignTimeDbContextFactory<LMSDBContext>
 {
     public LMSDBContext CreateDbContext(string[] args)
     {
-        var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../Task1");
+        var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../SaidBE");
         var configuration = new ConfigurationBuilder()
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.Development.json")

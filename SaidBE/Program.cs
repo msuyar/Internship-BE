@@ -1,4 +1,5 @@
-﻿using LMS.Data;
+﻿using AspNETWebAPIDersleri.Repository;
+using LMS.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // DBConfig
 builder.Services.AddDbContext<LMSDBContext>(options =>

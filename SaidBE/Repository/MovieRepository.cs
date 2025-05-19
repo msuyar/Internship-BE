@@ -1,6 +1,7 @@
 ﻿using LMS.Data;
 using LMS.Data.Entities;
-using Microsoft.EntityFrameworkCore;
+
+namespace AspNETWebAPIDersleri.Repository;
 
 public class MovieRepository : IMovieRepository
 {
