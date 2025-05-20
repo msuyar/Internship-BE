@@ -3,6 +3,7 @@ using LMS.Data.Dtos;
 using LMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AspNETWebAPIDersleri.Utils;
 
 namespace AspNETWebAPIDersleri.Controllers;
 
@@ -43,7 +44,7 @@ public class AuthController : ControllerBase
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Email = dto.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+            PasswordHash = PasswordHasher.HashPassword(dto.Password)
         };
 
         await _repository.AddAsync(user);
@@ -56,7 +57,7 @@ public class AuthController : ControllerBase
     {
         var user = await _repository.GetByEmailAsync(dto.Email);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        if (user == null || PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
         {
             return Unauthorized(new { message = "Invalid credentials." });
         }
@@ -64,16 +65,37 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Login successful." });
     }
     
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
+    {
+        var existingUser = await _repository.GetByIdAsync(id);
+
+        if (existingUser == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = $"User with ID {id} was not found."
+            });
+        }
+
+        existingUser.FirstName = dto.FirstName;
+        existingUser.LastName = dto.LastName;
+        existingUser.Email = dto.Email;
+        existingUser.UpdatedAt = DateTime.UtcNow;
+
+        return Ok(new
+        {
+            success = true,
+            message = "User updated successfully.",
+            data = existingUser
+        });
+    }
+    
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var success = await _repository.DeleteAsync(id);
-        
-        if (!success)
-        {
-            return NotFound(new { message = "User not found." });
-        }
-            
+        await _repository.DeleteAsync(id);
 
         return Ok(new { message = "User deleted successfully." });
     }
