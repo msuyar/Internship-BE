@@ -54,4 +54,21 @@ public class ReviewRepository : IReviewRepository
             .Include(r => r.Movie)
             .ToListAsync();
     }
+    
+    public async Task UpdateMovieAverageRating(Guid movieId)
+    {
+        var reviews = await _context.Reviews
+            .Where(r => r.MovieId == movieId)
+            .ToListAsync();
+
+        var movie = await _context.Movies.FindAsync(movieId);
+        if (movie != null)
+        {
+            movie.Rating = reviews.Any() 
+                ? reviews.Average(r => r.Rating) 
+                : 0;
+
+            await _context.SaveChangesAsync();
+        }
+    }
 }

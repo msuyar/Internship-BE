@@ -79,6 +79,7 @@ public class ReviewController : ControllerBase
         };
 
         await _reviewRepository.AddReviewAsync(review);
+        await _reviewRepository.UpdateMovieAverageRating(dto.MovieId);
 
         return Ok(new { message = "Review submitted successfully." });
     }
@@ -108,6 +109,7 @@ public class ReviewController : ControllerBase
         review.UpdatedAt = DateTime.UtcNow;
 
         await _reviewRepository.UpdateReviewAsync(review);
+        await _reviewRepository.UpdateMovieAverageRating(dto.MovieId);
 
         return Ok(new { message = "Review updated successfully." });
     }

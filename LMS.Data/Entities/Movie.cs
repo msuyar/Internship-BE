@@ -12,7 +12,7 @@ namespace LMS.Data.Entities
         public string? Cast { get; set; }
         public string? Director { get; set; }
         public string? Category { get; set; }
-        public float Rating { get; set; }
+        public double Rating { get; set; }
         public int Duration { get; set; }
         public DateTime ReleaseDate { get; set; }
         public ICollection<Review> Reviews { get; set; } = new List<Review>();

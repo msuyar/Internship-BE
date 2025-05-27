@@ -11,4 +11,5 @@ public interface IReviewRepository
         Task<Review?> GetUserReviewAsync(Guid userId, Guid movieId);
         Task UpdateReviewAsync(Review review);
         Task<List<Review>> GetAllReviewsAsync();
+        Task UpdateMovieAverageRating(Guid movieId);
 }

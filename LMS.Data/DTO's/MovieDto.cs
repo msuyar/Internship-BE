@@ -11,7 +11,7 @@ namespace LMS.Data.Dtos
         public string Director { get; set; }
         public string Category { get; set; }
         public int Duration { get; set; }
-        public float Rating { get; set; }
+        public double Rating { get; set; }
         public DateTime ReleaseDate { get; set; }
     }
 }
