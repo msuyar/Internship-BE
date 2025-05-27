@@ -26,6 +26,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // DBConfig
 builder.Services.AddDbContext<LMSDBContext>(options =>

@@ -33,7 +33,7 @@ public class MovieController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IActionResult> Get(Guid id)
     {
         // For Filtering look at page 181 of the book
         var movie = await _repository.GetByIdAsync(id);
@@ -94,7 +94,7 @@ public class MovieController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Put(int id, [FromBody] UpdateMovieDto dto)
+    public async Task<IActionResult> Put(Guid id, [FromBody] UpdateMovieDto dto)
     {
         var existing = await _repository.GetByIdAsync(id);
 
@@ -125,7 +125,7 @@ public class MovieController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         var existing = await _repository.GetByIdAsync(id);
 

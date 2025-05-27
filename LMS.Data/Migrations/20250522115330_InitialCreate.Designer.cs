@@ -3,6 +3,7 @@ using System;
 using LMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LMS.Data.Migrations
 {
     [DbContext(typeof(LMSDBContext))]
-    partial class LMSDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250522115330_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,8 +45,8 @@ namespace LMS.Data.Migrations
                     b.Property<string>("Plot")
                         .HasColumnType("text");
 
-                    b.Property<double>("Rating")
-                        .HasColumnType("double precision");
+                    b.Property<float>("Rating")
+                        .HasColumnType("real");
 
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("timestamp with time zone");
