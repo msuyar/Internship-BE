@@ -17,7 +17,7 @@ public class MovieRepository : IMovieRepository
         return _context.Movies.AsQueryable();
     }
 
-    public async Task <Movie?> GetByIdAsync(int id)
+    public async Task <Movie?> GetByIdAsync(Guid id)
     {
         var movie = await _context.Movies.FindAsync(id);
         return (movie);
@@ -35,7 +35,7 @@ public class MovieRepository : IMovieRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(Guid id)
     {
         var movie = await _context.Movies.FindAsync(id);
         _context.Movies.Remove(movie);

@@ -5,8 +5,8 @@ namespace AspNETWebAPIDersleri.Repository;
 public interface IMovieRepository
 {
     IQueryable<Movie> GetAll();
-    Task <Movie?> GetByIdAsync(int id);
+    Task <Movie?> GetByIdAsync(Guid id);
     Task AddAsync(Movie movie);
     Task UpdateAsync(Movie movie);
-    Task DeleteAsync(int id);
+    Task DeleteAsync(Guid id);
 }

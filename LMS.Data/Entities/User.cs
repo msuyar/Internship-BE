@@ -18,4 +18,5 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     [Required]
     public DateTime UpdatedAt { get; set; }
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
