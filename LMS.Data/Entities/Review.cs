@@ -14,11 +14,10 @@ namespace LMS.Data.Entities
         public string Note { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        [Required]
         public DateTime UpdatedAt { get; set; }
-        [JsonIgnore]
+        //[JsonIgnore]
         public User User { get; set; }
-        [JsonIgnore]
+        //[JsonIgnore]
         public Movie Movie { get; set; }
     }
 }
