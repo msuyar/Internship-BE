@@ -399,11 +399,11 @@ public class MovieController : ControllerBase
             var movieDetails = new MovieDetailsDto
             {
                 Id            = movie.Id,
-                Title         = movie.Title ?? string.Empty,
-                Plot          = movie.Plot  ?? string.Empty,
-                Cast          = movie.Cast  ?? string.Empty,
-                Director      = movie.Director  ?? string.Empty,
-                Category      = movie.Category  ?? string.Empty,
+                Title         = movie.Title,
+                Plot          = movie.Plot,
+                Cast          = movie.Cast,
+                Director      = movie.Director,
+                Category      = movie.Category,
                 Duration      = movie.Duration,
                 ReleaseDate   = movie.ReleaseDate,
                 AverageRating = movie.Rating,
