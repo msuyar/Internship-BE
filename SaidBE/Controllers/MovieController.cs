@@ -369,51 +369,58 @@ public class MovieController : ControllerBase
     [HttpGet("movieDetails/{id:guid}")]
     public async Task<IActionResult> GetMovieDetails(Guid id)
     {
-        
-        var movie = await _repository
-            .GetAll()                      
-            .Include(m => m.Reviews)      
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (movie == null)
+        try
         {
-            return NotFound(new
+            var movie = await _repository
+                .GetAll()                      
+                .Include(m => m.Reviews)      
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (movie == null)
             {
-                success = false,
-                message = "There is no movie with this id."
+                return NotFound(new
+                {
+                    success = false,
+                    message = "There is no movie with this id."
+                });
+            }
+        
+            var reviewDtos = movie.Reviews
+                .Select(r => new ReviewDto {
+                    Id        = r.Id,
+                    Rating    = r.Rating,
+                    Note      = r.Note,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt
+                
+                })
+                .ToList();
+        
+            var movieDetails = new MovieDetailsDto
+            {
+                Id            = movie.Id,
+                Title         = movie.Title ?? string.Empty,
+                Plot          = movie.Plot  ?? string.Empty,
+                Cast          = movie.Cast  ?? string.Empty,
+                Director      = movie.Director  ?? string.Empty,
+                Category      = movie.Category  ?? string.Empty,
+                Duration      = movie.Duration,
+                ReleaseDate   = movie.ReleaseDate,
+                AverageRating = movie.Rating,
+                ReviewDtos    = reviewDtos
+            };
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Retrieved {reviewDtos.Count} review(s) successfully",
+                data    = movieDetails
             });
         }
-        
-        var reviewDtos = movie.Reviews
-            .Select(r => new ReviewDto {
-                Id        = r.Id,
-                Rating    = r.Rating,
-                Note      = r.Note,
-                CreatedAt = r.CreatedAt,
-                UpdatedAt = r.UpdatedAt
-                
-            })
-            .ToList();
-        
-        var movieDetails = new MovieDetailsDto
+        catch (Exception e)
         {
-            Id            = movie.Id,
-            Title         = movie.Title ?? string.Empty,
-            Plot          = movie.Plot  ?? string.Empty,
-            Cast          = movie.Cast  ?? string.Empty,
-            Director      = movie.Director  ?? string.Empty,
-            Category      = movie.Category  ?? string.Empty,
-            Duration      = movie.Duration,
-            ReleaseDate   = movie.ReleaseDate,
-            AverageRating = movie.Rating,
-            ReviewDtos    = reviewDtos
-        };
-
-        return Ok(new
-        {
-            success = true,
-            message = $"Retrieved {reviewDtos.Count} review(s) successfully",
-            data    = movieDetails
-        });
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
