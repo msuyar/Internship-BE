@@ -99,4 +99,35 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = "User deleted successfully." });
     }
+    
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetUserReviews(Guid id)
+    {
+        
+        var user = await _repository
+            .GetAll()
+            .Include(u => u.Reviews)
+            .FirstOrDefaultAsync(u => u.Id == id);
+        
+        if (user == null)
+        {
+            return NotFound(new { success = false, message = "User not found." });
+        }
+        
+        List<ReviewDto> reviewDtos = user.Reviews
+            .Select(r => new ReviewDto {
+                Id        = r.Id,
+                Rating    = r.Rating,
+                Note      = r.Note,
+                CreatedAt = r.CreatedAt
+            })
+            .ToList();
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Retrieved {reviewDtos.Count} review(s) successfully",
+            data    = reviewDtos
+        });
+    }
 }

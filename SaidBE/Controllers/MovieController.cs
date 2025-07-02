@@ -365,4 +365,62 @@ public class MovieController : ControllerBase
             data = movies
         });
     }
+
+    [HttpGet("movieDetails/{id:guid}")]
+    public async Task<IActionResult> GetMovieDetails(Guid id)
+    {
+        try
+        {
+            var movie = await _repository
+                .GetAll()                      
+                .Include(m => m.Reviews)      
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (movie == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "There is no movie with this id."
+                });
+            }
+        
+            var reviewDtos = movie.Reviews
+                .Select(r => new ReviewDto {
+                    Id        = r.Id,
+                    Rating    = r.Rating,
+                    Note      = r.Note,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt
+                
+                })
+                .ToList();
+        
+            var movieDetails = new MovieDetailsDto
+            {
+                Id            = movie.Id,
+                Title         = movie.Title,
+                Plot          = movie.Plot,
+                Cast          = movie.Cast,
+                Director      = movie.Director,
+                Category      = movie.Category,
+                Duration      = movie.Duration,
+                ReleaseDate   = movie.ReleaseDate,
+                AverageRating = movie.Rating,
+                ReviewDtos    = reviewDtos
+            };
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Retrieved {reviewDtos.Count} review(s) successfully",
+                data    = movieDetails
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 }
