@@ -99,4 +99,48 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = "User deleted successfully." });
     }
+
+    [HttpPost("add-to-watchlist")]
+    public async Task<IActionResult> AddToWatchlist([FromBody] AddMovieToWatchlistDto dto)
+    {
+        try
+        {
+            await _repository.AddMovieToWatchlistAsync(dto.UserId, dto.MovieId);
+
+            return Ok(new { message = "Movie added to watchlist." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+    
+    [HttpGet("watchlist")]
+    public async Task<IActionResult> GetWatchlist(Guid userId)
+    {
+        try
+        {
+            var movies = await _repository.GetWatchedMoviesAsync(userId);
+            return Ok(new { watchedMovies = movies });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+    
+    [HttpGet("deletefromwatchlist")]
+    public async Task<IActionResult> DeleteFromWatchlist([FromBody] AddMovieToWatchlistDto dto)
+    {
+        try
+        {
+            await _repository.DeleteMovieFromWatchlistAsync(dto.UserId, dto.MovieId);
+
+            return Ok(new { message = "Movie removed from watchlist." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

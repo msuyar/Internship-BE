@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using LMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LMS.Data.Migrations
 {
     [DbContext(typeof(LMSDBContext))]
-    partial class LMSDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250702104505_AddWatchedMoviesToUser")]
+    partial class AddWatchedMoviesToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,7 +121,6 @@ namespace LMS.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.PrimitiveCollection<List<Guid>>("WatchedMovies")
-                        .IsRequired()
                         .HasColumnType("uuid[]");
 
                     b.HasKey("Id");

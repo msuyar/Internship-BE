@@ -19,4 +19,5 @@ public class User
     [Required]
     public DateTime UpdatedAt { get; set; }
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public List<Guid> WatchedMovies { get; set; } = new List<Guid>();
 }
