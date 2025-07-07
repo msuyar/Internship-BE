@@ -52,6 +52,7 @@ public class UserRepository : IUserRepository
         existingUser.LastName = user.LastName;
         existingUser.Email = user.Email;
         existingUser.UpdatedAt = DateTime.UtcNow;
+        existingUser.WatchedMovies = user.WatchedMovies;
 
         _context.Users.Update(existingUser);
         await _context.SaveChangesAsync();
@@ -69,5 +70,57 @@ public class UserRepository : IUserRepository
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
         return true;
+    }
+    
+    public async Task AddMovieToWatchlistAsync(Guid userId, Guid movieId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+
+        if (user == null || movieId == null)
+        {
+            throw new KeyNotFoundException($"User with ID {userId} not found.");
+        }
+
+        if (!user.WatchedMovies.Contains(movieId))
+        {
+            user.WatchedMovies.Add(movieId);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+    }
+    
+    public async Task<List<Guid>> GetWatchedMoviesAsync(Guid userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+
+        if (user == null)
+        {
+            throw new KeyNotFoundException($"User with ID {userId} not found.");
+        }
+
+        return user.WatchedMovies;
+    }
+    
+    public async Task DeleteMovieFromWatchlistAsync(Guid userId, Guid movieId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+
+        if (user == null)
+        {
+            throw new KeyNotFoundException($"User with ID {userId} not found.");
+        }
+
+        if (user.WatchedMovies == null || !user.WatchedMovies.Contains(movieId))
+        {
+            throw new KeyNotFoundException($"Movie with ID {movieId} not found in user with ID {userId}'s watchlist.");
+        }
+
+        user.WatchedMovies.Remove(movieId);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
     }
 }

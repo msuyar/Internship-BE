@@ -11,4 +11,7 @@ public interface IUserRepository
     Task<bool> EmailExistsAsync(string email);
     Task UpdateAsync(User user);
     Task<bool> DeleteAsync(Guid id);
+    Task AddMovieToWatchlistAsync(Guid userId, Guid movieId);
+    Task<List<Guid>> GetWatchedMoviesAsync(Guid userId);
+    Task DeleteMovieFromWatchlistAsync(Guid userId, Guid movieId);
 }
